@@ -26,12 +26,70 @@ class App extends React.Component {
     const { apiBaseUrl, affiliate } = this.props;
     axios.get(`${apiBaseUrl}/affiliate/${affiliate}`)
       .then((response) => {
-        const athletes = _.get(response, 'data.athletes');
-        const athletesByDivision = _.groupBy(athletes, 'divisionid');
-        console.log(athletesByDivision);
+
+        let scores = [];
+        let usersById = {};
+        const allAthletes = _.get(response, 'data.athletes');
+
+        const maleOrFemale = (divisionId) => {
+          return _.includes([1, 9, 12, 18], parseInt(divisionId)) ? 'm' : 'f';
+        };
+
+        _.each(allAthletes, (athlete) => {
+          const user = {
+            id: athlete.userid,
+            name: athlete.name,
+            avatar: athlete.profilepic,
+            gender: maleOrFemale(athlete.divisionid),
+          };
+          usersById[user.id] = user;
+          _.each(athlete.scores, (el, ix) => {
+            const score = {
+              userId: user.id,
+              display: el.scoredisplay,
+              rank: parseInt(el.workoutrank),
+              gender: user.gender,
+              wod: ix,
+            };
+            if (!_.isNaN(score.rank)) {
+              scores.push(score);
+            }
+          });
+        });
+
+        // Normalize the rankings by the groups and the wod...
+        let normalizedScores = [];
+        _.each(['m', 'f'], (gender) => {
+          const genderWodScores = _.chain(scores)
+                          .filter({gender: gender})
+                          .groupBy('wod')
+                          .value();
+
+          _.each(genderWodScores, (wod) => {
+            const wodScores = _.chain(wod)
+                          .sortBy('rank')
+                          .map((el, ix) => {
+                            return _.assign(el, { rank: ix + 1 });
+                          })
+                          .value();
+            normalizedScores = _.concat(normalizedScores, wodScores);
+          })
+        });
+
+        // Update the users Objects
+        _.each(_.keys(usersById), (key) => {
+          const user = usersById[key];
+          const foundScores = _.filter(normalizedScores, (s) => s.userId == user.id);
+          const totalScore = _.reduce(foundScores, (sum, score) => {
+            return sum + score.rank;
+          }, 0);
+          usersById[key]['totalScore'] = totalScore;
+          usersById[key]['scores'] = _.sortBy(foundScores, 'wod');
+        });
+
         this.setState({
           isLoading: false,
-          athletesByDivision: athletesByDivision,
+          usersByGender: _.groupBy(usersById, 'gender'),
         });
       })
       .catch((error) => {
@@ -47,27 +105,34 @@ class App extends React.Component {
 
   render() {
     const { title } = this.props;
-    const { athletesByDivision } = this.state;
+    const { usersByGender } = this.state;
     const linkToWod = (name) => `https://games.crossfit.com/workouts/open/2017/${name}?division=2`;
-    const linkToAthlete = (name) => `https://games.crossfit.com/workouts/open/2017/${name}?division=2`;
+    const linkToAthlete = (id) => `https://games.crossfit.com/workouts/open/2017/${id}?division=2`;
 
-    const lists = _.map(athletesByDivision, (group, ix) => {
-      const groupTitle = divisionTitles[ix];
-      const items = _.map(group, (athlete, ix) => {
-        const rankInGroup = ix + 1;
+    const lists = _.map(['m', 'f'], (key, ix) => {
+      const groupTitle = (ix === 0) ? 'Men' : '#larunnaiset';
+      const sortedUsers = _.sortBy(_.get(usersByGender, key, []), 'totalScore');
+      const items = _.map(sortedUsers, (user, ix) => {
+        let rankInGroup = ix + 1;
+        if (ix > 0) {
+          if (_.get(sortedUsers, `[${ix-1}].totalScore`) == user.totalScore) {
+            rankInGroup -= 1;
+          }
+        }
         return (
-          <tr key={ix} onClick={this.openAthleteDetails.bind(this, athlete.userid)}>
+          <tr key={ix} onClick={this.openAthleteDetails.bind(this, user.id)}>
             <td className="col1 center bold bigger">{rankInGroup}</td>
-            <td className="col2"><img src={_.get(athlete, 'profilepic')} className="avatar hide-mobile"/><span>{athlete.name}</span></td>
-            <td className="col3 center">{athlete.overallscore}</td>
-            <td className="col4">{`${_.get(athlete, 'scores[0].workoutrank')}(${_.get(athlete, 'scores[0].scoredisplay')})`}</td>
-            <td className="col5">{`${_.get(athlete, 'scores[1].workoutrank')}(${_.get(athlete, 'scores[1].scoredisplay')})`}</td>
-            <td className="col6">{`${_.get(athlete, 'scores[2].workoutrank')}(${_.get(athlete, 'scores[2].scoredisplay')})`}</td>
-            <td className="col7">{`${_.get(athlete, 'scores[3].workoutrank')}(${_.get(athlete, 'scores[3].scoredisplay')})`}</td>
-            <td className="col8">{`${_.get(athlete, 'scores[4].workoutrank')}(${_.get(athlete, 'scores[4].scoredisplay')})`}</td>
+            <td className="col2"><img src={_.get(user, 'avatar')} className="avatar hide-mobile"/><span>{user.name}</span></td>
+            <td className="col3 center">{user.totalScore}</td>
+            <td className="col4">{`${_.get(user, 'scores[0].rank', '--')}(${_.get(user, 'scores[0].display', '--')})`}</td>
+            <td className="col5">{`${_.get(user, 'scores[1].rank', '--')}(${_.get(user, 'scores[1].display', '--')})`}</td>
+            <td className="col6">{`${_.get(user, 'scores[2].rank', '--')}(${_.get(user, 'scores[2].display', '--')})`}</td>
+            <td className="col7">{`${_.get(user, 'scores[3].rank', '--')}(${_.get(user, 'scores[3].display', '--')})`}</td>
+            <td className="col8">{`${_.get(user, 'scores[4].rank', '--')}(${_.get(user, 'scores[4].display', '--')})`}</td>
           </tr>
         )
       });
+
       return (
         <div key={ix} className="division">
           <div className="division__heading">
