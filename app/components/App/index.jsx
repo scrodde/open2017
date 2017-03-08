@@ -46,6 +46,7 @@ class App extends React.Component {
   }
 
   render() {
+    const { title } = this.props;
     const { athletesByDivision } = this.state;
     const linkToWod = (name) => `https://games.crossfit.com/workouts/open/2017/${name}?division=2`;
     const linkToAthlete = (name) => `https://games.crossfit.com/workouts/open/2017/${name}?division=2`;
@@ -92,7 +93,7 @@ class App extends React.Component {
     return (
       <div>
         <header>
-          <h1>Open 2017<span>Crossfit Lauttasaari</span></h1>
+          <h1>Open 2017<span>{title}</span></h1>
         </header>
         <section>
           {lists}

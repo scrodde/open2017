@@ -14,6 +14,8 @@ const argv    = parseArgs(process.argv.slice(2));
 const port    = process.env.PORT || 8000;
 const host    = process.env.HOST || '0.0.0.0';
 const env     = process.env.NODE_ENV || 'development';
+const assetsManifest = require(path.resolve(__dirname, 'public/assets/assets-manifest.json'));
+let baseUrl   = 'http://open.scrod.de';
 
 const server = new Hapi.Server();
 server.connection({
@@ -58,11 +60,42 @@ server.register(require('vision'), (err) => {
 
   server.route({
     method: 'GET',
-    path: '/',
+    path: '/crossfitlauttasaari',
     handler: (request, reply) => {
-      reply.view('index');
+      reply.view('index', {
+        config: {
+          title: 'Crossfit Lauttasaari',
+          apiBaseUrl: `${baseUrl}/api`,
+          affiliate: '7508',
+          assets: {
+            js: assetsManifest.main.js,
+            css: assetsManifest.main.css,
+          },
+          og: {
+            url: request.uri,
+            title: 'Crossfit Lauttasaari Leaderboard 2017',
+            description: 'Crossfit Lauttasaari Leaderboard 2017',
+            image: `${baseUrl}/images/cfl_logo.jpg`,
+          }
+        }
+      });
     }
   });
+});
+
+server.register(require('inert'), (err) => {
+
+  if (err) { throw err; }
+
+  server.route({
+    method: 'GET',
+    path: '/{param*}',
+    handler: {
+      directory: {
+          path: 'public/assets'
+      }
+    }
+});
 });
 
 /**
@@ -71,4 +104,5 @@ server.register(require('vision'), (err) => {
 server.start((err) => {
   if (err) { throw err };
   console.log(`Server running at: ${server.info.uri}`);
+  if (env == 'development') baseUrl = server.info.uri;
 });

@@ -4,5 +4,5 @@ import ReactDOM from 'react-dom';
 import App from './components/App';
 
 document.addEventListener("DOMContentLoaded", () => {
-  ReactDOM.render(<App apiBaseUrl="http://scrodde-mbp.local:8000/api" affiliate="7508" />, document.getElementById('container'));
+  ReactDOM.render(<App title={window.config.title} apiBaseUrl={window.config.apiBaseUrl} affiliate={window.config.affiliate} />, document.getElementById('container'));
 });
