@@ -62,6 +62,8 @@ server.register(require('vision'), (err) => {
     method: 'GET',
     path: '/crossfitlauttasaari',
     handler: (request, reply) => {
+
+      console.log(request.url);
       reply.view('index', {
         config: {
           title: 'Crossfit Lauttasaari',
@@ -72,9 +74,9 @@ server.register(require('vision'), (err) => {
             css: assetsManifest.main.css,
           },
           og: {
-            url: request.uri,
-            title: 'Crossfit Lauttasaari Leaderboard 2017',
-            description: 'Crossfit Lauttasaari Leaderboard 2017',
+            url: `${baseUrl}/crossfitlauttasaari`,
+            title: 'The Open 2017 Leaderboard - Crossfit Lauttasaari',
+            description: 'Crossfit Lauttasaari Open 2017 leaderboard',
             image: `${baseUrl}/images/cfl_logo.jpg`,
           }
         }
