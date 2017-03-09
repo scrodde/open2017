@@ -116,7 +116,7 @@ class App extends React.Component {
         let rankInGroup = ix + 1;
         if (ix > 0) {
           if (_.get(sortedUsers, `[${ix-1}].totalScore`) == user.totalScore) {
-            rankInGroup -= 1;
+            rankInGroup = _.findIndex(sortedUsers, {totalScore: user.totalScore}) + 1;
           }
         }
         return (

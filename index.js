@@ -62,8 +62,6 @@ server.register(require('vision'), (err) => {
     method: 'GET',
     path: '/crossfitlauttasaari',
     handler: (request, reply) => {
-
-      console.log(request.url);
       reply.view('index', {
         config: {
           title: 'Crossfit Lauttasaari',
