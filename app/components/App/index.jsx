@@ -47,11 +47,12 @@ class App extends React.Component {
             const score = {
               userId: user.id,
               display: el.scoredisplay,
-              rank: parseInt(el.workoutrank),
+              rank: null,
+              orgRank: parseInt(el.workoutrank),
               gender: user.gender,
               wod: ix,
             };
-            if (!_.isNaN(score.rank)) {
+            if (!_.isNaN(score.orgRank)) {
               scores.push(score);
             }
           });
@@ -66,13 +67,24 @@ class App extends React.Component {
                           .value();
 
           _.each(genderWodScores, (wod) => {
-            const wodScores = _.chain(wod)
-                          .sortBy('rank')
-                          .map((el, ix) => {
-                            return _.assign(el, { rank: ix + 1 });
-                          })
-                          .value();
-            normalizedScores = _.concat(normalizedScores, wodScores);
+            const wodScores = _.sortBy(wod, 'orgRank');
+
+            // Take into account: Two users can have the same equal score !!
+            let normalizedWodScores = [];
+            _.forEach(wodScores, (score, ix) => {
+              var adjustment = 0;
+              if (ix > 0) {
+                if (score.orgRank == wodScores[ix - 1].orgRank) {
+                  adjustment = -1;
+                  console.log("YEP" + adjustment)
+                }
+              }
+
+              const s = _.assign(score, { rank: (ix + 1 + adjustment) });
+              normalizedWodScores.push(s);
+            });
+
+            normalizedScores = _.concat(normalizedScores, normalizedWodScores);
           })
         });
 
