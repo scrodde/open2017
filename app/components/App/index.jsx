@@ -68,15 +68,14 @@ class App extends React.Component {
 
           _.each(genderWodScores, (wod) => {
             const wodScores = _.sortBy(wod, 'orgRank');
-
-            // Take into account: Two users can have the same equal score !!
+            // Take into account: Multiple users can have the same equal score !!
             let normalizedWodScores = [];
             _.forEach(wodScores, (score, ix) => {
               var adjustment = 0;
               if (ix > 0) {
-                if (score.orgRank == wodScores[ix - 1].orgRank) {
-                  adjustment = -1;
-                  console.log("YEP" + adjustment)
+                const firstIndex = _.findIndex(wodScores, {orgRank: score.orgRank});
+                if (firstIndex > -1) {
+                  adjustment = firstIndex - ix;
                 }
               }
 
@@ -92,6 +91,7 @@ class App extends React.Component {
         _.each(_.keys(usersById), (key) => {
           const user = usersById[key];
           const foundScores = _.filter(normalizedScores, (s) => s.userId == user.id);
+          // console.log(foundScores);
           const totalScore = _.reduce(foundScores, (sum, score) => {
             return sum + score.rank;
           }, 0);
