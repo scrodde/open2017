@@ -36,14 +36,8 @@ server.route({
   method: 'GET',
   path: '/api/affiliate/{id}',
   handler: function (request, reply) {
-    rp(`https://games.crossfit.com/competitions/api/v1/competitions/open/2017/leaderboards?affiliate=${request.params.id}&page=1`)
-    .then((body) => {
-      json = JSON.parse(body);
-      reply(json);
-    })
-    .catch((err) => {
-      throw err;
-    });
+    const file = fs.readFileSync(path.join(__dirname, 'archive', `2017-affiliate-${request.params.id}.json`), 'utf-8');
+    reply(JSON.parse(file));
   }
 });
 
