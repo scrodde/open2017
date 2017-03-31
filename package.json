@@ -1,18 +1,13 @@
 {
-  "name": "discoverweekly",
+  "name": "open2017",
   "version": "1.0.0",
-  "engines": {
-    "node": "7.2.1"
-  },
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "yarn start:api && yarn start:app",
-    "start:api": "yarn nodemon index.js",
-    "start:app": "webpack-dev-server --config webpack.config.js",
     "clean:build": "rm -rf public/assets/*",
-    "build": "yarn clean:build && webpack -p --config webpack.prod.config.js"
+    "build": "yarn clean:build && webpack -p --config webpack.prod.config.js",
+    "start": "node node_modules/webpack-dev-server/bin/webpack-dev-server.js --config webpack.config.js"
   },
   "author": "Niklas Schröder <scrodde@gmail.com>",
   "license": "MIT",

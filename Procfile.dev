@@ -1,0 +1,2 @@
+app: yarn start
+api: PORT=8000 nodemon index.js
